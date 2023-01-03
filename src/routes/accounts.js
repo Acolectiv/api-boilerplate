@@ -6,12 +6,12 @@ const UserManager = require("../managers/UserManager");
 
 router.post('/create', auth, async (req, res, next) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, first_name, last_name } = req.body;
 
-        if(!username || !email || !password)
-            return res.status(401).send({ success: false, error: "Username, email, password empty." });
+        if(!username || !email || !password || !first_name || !last_name)
+            return res.status(401).send({ success: false, error: "Username, email, password, first_name, last_name empty." });
 
-        const { user, token, error } = await UserManager.createUser({ username, email, password });
+        const { user, token, error } = await UserManager.createUser({ username, email, password, first_name, last_name });
         if(error) return res.status(401).send({ success: false, error });
 
         return res.send({ user, token });
@@ -34,6 +34,16 @@ router.post('/login', async (req, res, next) => {
         console.log(e)
         res.status(500).send({ success: false, error: e });
     }
+});
+
+router.get('/retrieve/:username', async (req, res, next) => {
+    let username = req.params.username;
+    if(!username) return res.status(401).send({ success: false, error: "no username was provided" });
+
+    let user = await UserManager.findUserByUsername(username);
+    if(!user) return res.status(401).send({ sucess: false, error: "account with that username doesn't exist" });
+
+    return res.send({ success: true, user: user });
 })
 
 module.exports = router;

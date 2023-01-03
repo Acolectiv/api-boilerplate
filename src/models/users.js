@@ -6,6 +6,14 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
+    first_name: {
+        type: String,
+        required: true
+    },
+    last_name: {
+        type: String,
+        required: true
+    },
     email: {
         type: String,
         required: true
@@ -13,7 +21,12 @@ const UserSchema = new Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    balance: {
+        type: Number,
+        default: 0
+    },
+    pLink: String
 });
 
 UserSchema.pre('save', async function(next) {

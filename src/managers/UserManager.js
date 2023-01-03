@@ -6,10 +6,16 @@ const { compare } = require("bcrypt");
 const User = model('User');
 
 class UserManager {
-    constructor() {
+    constructor(opts) {
         if(!UserManager.instance) {
-            Logger.log("[UserManager] -> UserManager class initialized");
+            this.opts = opts;
+            Logger.log("[UserManager] -> UserManager class initialized.");
             UserManager.instance = this;
+
+            if(this.opts.memoryCaching) {
+                this.caching = true;
+                this.Cache = require("./MemoryStore");
+            }
         }
 
         return UserManager.instance;
@@ -22,19 +28,32 @@ class UserManager {
     }
 
     async findUserByUsername(username) {
-        return User.findOne({ username });
+        if(this.caching) {
+            let result = this.Cache.get(username);
+            if(result) return result;
+            else {
+                const res = await User.findOne({ username });
+
+                this.Cache.put(username, res);
+                return res;
+            }
+        } else {
+            const result = await User.findOne({ username });
+            
+            return result;
+        }
     }
 
     async createUser(payload) {
         if(!payload) return Logger.error(`[UserManager] -> Payload must be greater then 0.`);
 
-        let error = null;
-
         if((await this.userExists(payload.username)) === true) 
             return { error: "user already exists" }
 
         const user = new User(payload);
-        await user.save();
+        let cache = await user.save();
+
+        if(this.caching) this.Cache.put(cache._id, cache);
 
         const token = jwt.sign({ userId: user._id }, process.env.JWT_TOKEN);
 
@@ -43,8 +62,6 @@ class UserManager {
 
     async loginUser(payload) {
         if(!payload) return Logger.error(`[UserManager] -> Payload must be greater then 0.`);
-
-        let error = null;
 
         const user = await this.findUserByUsername(payload.username);
         if(!user) return { error: "user doesn't exist" };
@@ -58,4 +75,4 @@ class UserManager {
     }
 }
 
-module.exports = new UserManager();
+module.exports = new UserManager({ memoryCaching: true });

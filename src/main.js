@@ -7,6 +7,7 @@ const svConfig = require("./config/server");
 const Logger = require("./utils/logger");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const store = require("./managers/MemoryStore");
 
 const app = express();
 
