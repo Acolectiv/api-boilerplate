@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - '18'
+services:
+  - mongodb
+cache: npm
+branches:
+  only:
+    - master
+env:
+  global:
+    - MONGODB_URL=mongodb://127.0.0.1:27017/db
+    - JWT_TOKEN=HKDJSAHJKDAS7897d9s8adjkan!!!80s
+script:
+  - npm test
