@@ -2,6 +2,7 @@ const Logger = require("../utils/Logger");
 const { model } = require("mongoose");
 const jwt = require("jsonwebtoken");
 const { compare } = require("bcrypt");
+const { sanitize } = require("mongoose-sanitize");
 
 const User = model('User');
 
@@ -22,7 +23,7 @@ class UserManager {
     }
 
     async userExists(username) {
-        const user = await User.findOne({ username });
+        const user = await User.findOne(sanitize({ username }));
         if(!user) return false;
         else return true;
     }
@@ -32,13 +33,13 @@ class UserManager {
             let result = this.Cache.get(username);
             if(result) return result;
             else {
-                const res = await User.findOne({ username });
+                const res = await User.findOne(sanitize({ username }));
 
                 this.Cache.put(username, res);
                 return res;
             }
         } else {
-            const result = await User.findOne({ username });
+            const result = await User.findOne(sanitize({ username }));
             
             return result;
         }
@@ -50,7 +51,7 @@ class UserManager {
         if((await this.userExists(payload.username)) === true) 
             return { error: "user already exists" }
 
-        const user = new User(payload);
+        const user = new User(sanitize(payload));
         let cache = await user.save();
 
         if(this.caching) this.Cache.put(cache._id, cache);
@@ -63,7 +64,7 @@ class UserManager {
     async loginUser(payload) {
         if(!payload) return Logger.error(`[UserManager] -> Payload must be greater then 0.`);
 
-        const user = await this.findUserByUsername(payload.username);
+        const user = await this.findUserByUsername(sanitize(payload.username));
         if(!user) return { error: "user doesn't exist" };
         
         const isPasswordValid = await compare(payload.password, user.password);
