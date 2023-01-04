@@ -15,6 +15,7 @@ router.post('/create', async (req, res, next) => {
 
         return res.send({ user, token });
     } catch(e) {
+        console.log(e)
         res.status(500).send({ success: false, error: e });
     };
 });

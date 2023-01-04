@@ -7,15 +7,24 @@ const svConfig = require("./config/server");
 const Logger = require("./utils/logger");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const store = require("./managers/MemoryStore");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const sanitize = require("express-mongo-sanitize");
+const compression = require("compression");
 
-let limiter = new rateLimit({
+let limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 10
 });
 
 const app = express();
+
+app.use(helmet());
+
+app.use(xss());
+app.use(sanitize());
+app.use(compression());
 
 app.use(limiter);
 app.use(bodyParser.json());
